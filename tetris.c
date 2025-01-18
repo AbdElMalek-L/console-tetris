@@ -11,28 +11,52 @@
 #define BOARD_HEIGHT 40 
 #define BOARD_WIDTH 60 // normalment hna khasha tkon 30 walakin the 178 character am working with is too thin.{}
 
+#define RECT_CHAR 178
+
 #define COLOR_RED     12
 #define COLOR_GREEN   10
 #define COLOR_YELLOW  14
 #define COLOR_BLUE    9
+#define COLOR_MAGENTA 5
 #define COLOR_DEFAULT 7 // Default console color
 
 
-const int TETROMINO_I[4] = {
-    1,1,1,1
-    };
-const int TETROMINO_L[2][4] = {
-    {0,0,0,1},
-    {1,1,1,1}
-    };
-const int TETROMINO_S[2][4] = {
-    {0,1,1,1},
-    {1,1,1,0}
-    };
-const int TETROMINO_O[2][2] = {
-    {1,1},
-    {1,1}
-    };
+
+
+typedef struct {
+    int shape[4][4]; // 4x4 grid for each Tetromino
+    int color;       // Color index
+} Tetromino;
+
+Tetromino tetrominos[7] = {
+    { { {0,0,0,0}, 
+        {1,1,1,1},
+        {0,0,0,0},
+        {0,0,0,0} }, 1 }, // I
+    { { {0,1,0,0},
+        {1,1,1,0},
+        {0,0,0,0},
+        {0,0,0,0} }, 2 }, // T
+    { { {0,1,1,0},
+        {1,1,0,0},
+        {0,0,0,0},
+        {0,0,0,0} }, 3 }, // S
+    { { {0,1,1,0},
+        {0,0,1,1},
+        {0,0,0,0},
+        {0,0,0,0} }, 4 }, // Z
+    { { {0,0,1,0},
+        {1,1,1,0},
+        {0,0,0,0},
+        {0,0,0,0} }, 5 }, // L
+    { { {1,1,1,0},
+        {0,0,1,0},
+        {0,0,0,0},
+        {0,0,0,0} }, 6 }, // J
+
+
+    // Add other Tetrominos
+};
 
    //TODO: the rest of TETROMINOS
 
@@ -49,16 +73,29 @@ void goToXY(short x, short y);
 void drawWelcomePage(int width, int height);
 void waitForNextFrame(short hz);
 void setTextColor(short color);
+void drawTetromino(Tetromino tetromino, short x, short y);
 
 boolean game_exit = 0;
 
 
 int main() {
     setConsoleSize(SCREEN_WIDTH,SCREEN_HEIGHT);
-    
+    int time = clock();
+
     while(!game_exit){
         drawWelcomePage(BOARD_WIDTH,BOARD_HEIGHT);
         waitForNextFrame(10); // Hz
+        int topPosition = 0;
+        if (topPosition < BOARD_HEIGHT && clock() > time + 100  ){
+            drawTetromino(tetrominos[0],topPosition,25);
+            drawTetromino(tetrominos[4],topPosition,29);
+            drawTetromino(tetrominos[1],topPosition,33);
+            time =+ 100;
+            topPosition =+ 1;
+        } else {
+            ;
+        }
+
 	}
 
 
@@ -94,19 +131,18 @@ void goToXY(short x, short y) {
     SetConsoleCursorPosition(hConsoleOutput, Cursor_Pos);
 }
 void waitForNextFrame(short hz){
-    int milli_seconds = 1 / hz * 1000;
+    int milli_seconds = 1000 / hz;
     clock_t start_time = clock();
     while(clock() < start_time + milli_seconds);
 }
 
 void drawWelcomePage(int height, int width) {
-    char borders = 178;
     for(int x = 0; x < height; x++){
 		for(int y = 0; y <width ; y++){
 			if( (x == 0) || (y == 0) || (y == width-1) || (x == height-1)){
 				//DONE: Borders 
                 goToXY(x,y);
-				printf("%c%c",borders, borders);
+				printf("%c%c",RECT_CHAR, RECT_CHAR);
 			}
 			
 		}
@@ -116,38 +152,41 @@ void drawWelcomePage(int height, int width) {
 			if(0 != TETRIS_LOGO[x][y]){
 
                 switch (TETRIS_LOGO[x][y]) {
-                    case 1: setTextColor(COLOR_RED); break;
+                    case 1: setTextColor(COLOR_BLUE ); break;
                     case 2: setTextColor(COLOR_GREEN); break;
                     case 3: setTextColor(COLOR_YELLOW); break;
-                    case 4: setTextColor(COLOR_BLUE); break;
+                    case 4: setTextColor(COLOR_RED); break;
                 }
                 
                 goToXY(y*2+8,x+3);
-				printf("%c%c" ,borders, borders);
+				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
                 setTextColor(COLOR_DEFAULT); // Reset to default color
-				//TODO: tetris logo
-
-                /*
-                
-                ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓    ▓▓▓▓▓▓  ▓▓▓▓▓▓
-                  ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓    ▓▓      
-                  ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓▓▓  
-                  ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓        ▓▓  
-                  ▓▓    ▓▓▓▓▓▓    ▓▓    ▓▓  ▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓  
-
-                1111110011111100111111001111000011111100111111
-                0011000011000000001100001100110000110000110000
-                0011000011110000001100001111000000110000111111
-                0011000011000000001100001100110000110000000011
-                0011000011111100001100001100110000110000111111
-                
-                
-                */
-                
 
             }
         }
     }
 }
+
+void drawTetromino(Tetromino tetromino, short x, short y){
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 4; j++){
+            if(tetromino.shape[i][j] != 0){
+
+                switch (tetromino.color) {
+                    case 1: setTextColor(COLOR_BLUE ); break;
+                    case 2: setTextColor(COLOR_GREEN); break;
+                    case 3: setTextColor(COLOR_YELLOW); break;
+                    case 4: setTextColor(COLOR_RED); break;
+                }
+                
+                goToXY(j*2+y,i+x);
+				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
+                setTextColor(COLOR_DEFAULT); // Reset to default color
+
+            }
+        }
+    }
+}
+
 
 
