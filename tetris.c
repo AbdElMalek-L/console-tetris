@@ -7,8 +7,8 @@
 #include <time.h>
 
 #define SCREEN_WIDTH 500
-#define SCREEN_HEIGHT 700
-#define BOARD_HEIGHT 40 
+#define SCREEN_HEIGHT 600
+#define BOARD_HEIGHT 30 
 #define BOARD_WIDTH 60 // normalment hna khasha tkon 30 walakin the 178 character am working with is too thin.{}
 
 #define RECT_CHAR 178
@@ -19,6 +19,8 @@
 #define COLOR_BLUE    9
 #define COLOR_MAGENTA 5
 #define COLOR_DEFAULT 7 // Default console color
+
+
 
 
 
@@ -66,6 +68,7 @@ Tetromino tetrominos[7] = {
 
 void setConsoleSize(int width, int height);
 void goToXY(short x, short y);
+void drawBorders(int width, int height);
 void drawWelcomePage(int width, int height);
 void waitForNextFrame(short hz);
 void setTextColor(short color);
@@ -74,30 +77,38 @@ void clearScreen();
 void drawBorders(int width, int height);
 
 boolean game_exit = 0;
+boolean game_over = 0;
+
 
 
 int main() {
-    setConsoleSize(SCREEN_WIDTH,SCREEN_HEIGHT);
-    int time = clock();
-    int topPosition = 0;
+    setConsoleSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    int time = clock(); // Initialize timing
+    int topPosition = 0; // Initialize Tetromino position
+
+    drawWelcomePage(BOARD_WIDTH, BOARD_HEIGHT);
+
     while(!game_exit){
-        drawWelcomePage(BOARD_WIDTH,BOARD_HEIGHT);
-        waitForNextFrame(10); // Hz
-        
-        // if (topPosition < BOARD_HEIGHT-3 && clock() > time + 300  ){
-        //     clearScreen();
-        //     drawTetromino(tetrominos[0],topPosition,2);
-        //     drawTetromino(tetrominos[4],topPosition,18);
-        //     drawTetromino(tetrominos[1],topPosition,30);
-        //     time += 300;
-        //     topPosition += 1;
-        // } else {
-        //     ;
-        // }
+        if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
+        while (!game_over) {
+            // Check if Tetromino is within bounds and enough time has passed
+            if (topPosition < BOARD_HEIGHT - 3 && clock() > time + 300) {
+                clearScreen();
+                drawBorders(BOARD_HEIGHT,BOARD_WIDTH );
+                drawTetromino(tetrominos[0], topPosition, 2); // Draw Tetromino
+                drawTetromino(tetrominos[4], topPosition, 18); // Draw another Tetromino
+                drawTetromino(tetrominos[1], topPosition, 30); // Draw another Tetromino
+                time = clock(); // Reset the timer
+                topPosition += 1; // Move Tetromino down
+            }
+            waitForNextFrame(10); // Control frame rate
 
-	}
+        }
 
+    }
 
+    }
+    // Check if 'A' key is pressed
 
     return 0;
 }
@@ -165,7 +176,7 @@ void drawTetrisLogo(){
                 switch (TETRIS_LOGO[x][y]) {
                     case 1: setTextColor(COLOR_BLUE ); break;
                     case 2: setTextColor(COLOR_GREEN); break;
-                    case 3: setTextColor(COLOR_YELLOW); break;
+                    case 3: setTextColor(COLOR_MAGENTA); break;
                     case 4: setTextColor(COLOR_RED); break;
                 }
                 
@@ -194,7 +205,7 @@ void drawWelcomePage(int height, int width) {
     goToXY(5,20);
     printf("Q:              Quit the game.");
     goToXY(BOARD_WIDTH - 20,BOARD_HEIGHT-2);
-    setTextColor(COLOR_MAGENTA );
+    setTextColor(COLOR_GREEN );
     printf("by AbdElMalek-L");
     setTextColor(COLOR_DEFAULT); // Reset to default color
 
@@ -232,3 +243,116 @@ void drawTetromino(Tetromino tetromino, short x, short y){
 void clearScreen() {
     system("cls"); // Clears the console screen (Windows-specific)
 }
+
+/*
+
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓0
+▓▓                                                          ▓▓1
+▓▓                                                          ▓▓2
+▓▓                                                          ▓▓3
+▓▓                                                          ▓▓4
+▓▓                                                          ▓▓5
+▓▓      ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓    ▓▓▓▓▓▓  ▓▓▓▓▓▓      ▓▓6
+▓▓        ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓    ▓▓          ▓▓7
+▓▓        ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓▓▓      ▓▓8
+▓▓        ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓        ▓▓      ▓▓9
+▓▓        ▓▓    ▓▓▓▓▓▓    ▓▓    ▓▓  ▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓      ▓▓10
+▓▓                                                          ▓▓11
+▓▓                                                          ▓▓12
+▓▓                                                          ▓▓13
+▓▓                                                          ▓▓14
+▓▓   Enter:          To start the game.                     ▓▓15
+▓▓   Left Arrow:     Move the Tetromino left.               ▓▓16
+▓▓   Right Arrow:    Move the Tetromino right.              ▓▓17
+▓▓   Down Arrow:     Speed up the Tetromino's fall.         ▓▓18
+▓▓   Up Arrow:       Rotate the Tetromino.                  ▓▓19
+▓▓   Q:              Quit the game.                         ▓▓20
+▓▓                                                          ▓▓21
+▓▓                                                          ▓▓22
+▓▓                                                          ▓▓23
+▓▓                                                          ▓▓24
+▓▓                                                          ▓▓25
+▓▓                                                          ▓▓26
+▓▓                                                          ▓▓27
+▓▓                                                          ▓▓28
+▓▓                                                          ▓▓29
+▓▓                                                          ▓▓30
+▓▓                                                          ▓▓31
+▓▓                                                          ▓▓32
+▓▓                                                          ▓▓33
+▓▓                                                          ▓▓34
+▓▓                                                          ▓▓35
+▓▓                                                          ▓▓36
+▓▓                                                          ▓▓37
+▓▓                                      by AbdElMalek-L     ▓▓38
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓39
+
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓0  
+▓▓                                                          ▓▓11
+▓▓                                                          ▓▓12
+▓▓                                                          ▓▓13
+▓▓                                                          ▓▓14
+▓▓                                                          ▓▓15
+▓▓        00                                                ▓▓16
+▓▓        99                                                ▓▓17
+▓▓        88                                                ▓▓18
+▓▓        77                                                ▓▓19
+▓▓        66                                                ▓▓20
+▓▓        55                                                ▓▓21
+▓▓        44                                                ▓▓22
+▓▓        33                                                ▓▓23
+▓▓        22                                                ▓▓24
+▓▓        11                                                ▓▓25
+▓▓        00                                                ▓▓26
+▓▓        99                                                ▓▓27
+▓▓        88                                                ▓▓28
+▓▓        77                                                ▓▓29
+▓▓        66                                                ▓▓30
+▓▓        55                                                ▓▓31
+▓▓        44                                                ▓▓32
+▓▓        33                                                ▓▓33
+▓▓        22                                                ▓▓34
+▓▓        112233445566778899001122334455                    ▓▓35
+▓▓                                                          ▓▓36
+▓▓                                                          ▓▓37
+▓▓                                      by AbdElMalek-L     ▓▓38
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓39
+1234567890123456789012345678901234567890123456789012345678912
+      10        20        30        40        50        60
+
+
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓    Score: 9999999   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓              ▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓   Next:      ▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓              ▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+
+
+
+
+*/
