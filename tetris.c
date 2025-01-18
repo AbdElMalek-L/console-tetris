@@ -74,6 +74,7 @@ void drawWelcomePage(int width, int height);
 void waitForNextFrame(short hz);
 void setTextColor(short color);
 void drawTetromino(Tetromino tetromino, short x, short y);
+void clearScreen();
 
 boolean game_exit = 0;
 
@@ -81,17 +82,18 @@ boolean game_exit = 0;
 int main() {
     setConsoleSize(SCREEN_WIDTH,SCREEN_HEIGHT);
     int time = clock();
-
+    int topPosition = 0;
     while(!game_exit){
         drawWelcomePage(BOARD_WIDTH,BOARD_HEIGHT);
         waitForNextFrame(10); // Hz
-        int topPosition = 0;
-        if (topPosition < BOARD_HEIGHT && clock() > time + 100  ){
-            drawTetromino(tetrominos[0],topPosition,25);
-            drawTetromino(tetrominos[4],topPosition,29);
+        
+        if (topPosition < BOARD_HEIGHT-1 && clock() > time + 300  ){
+            clearScreen();
+            drawTetromino(tetrominos[0],topPosition,5);
+            drawTetromino(tetrominos[4],topPosition,23);
             drawTetromino(tetrominos[1],topPosition,33);
-            time =+ 100;
-            topPosition =+ 1;
+            time += 300;
+            topPosition += 1;
         } else {
             ;
         }
@@ -137,9 +139,9 @@ void waitForNextFrame(short hz){
 }
 
 void drawWelcomePage(int height, int width) {
-    for(int x = 0; x < height; x++){
-		for(int y = 0; y <width ; y++){
-			if( (x == 0) || (y == 0) || (y == width-1) || (x == height-1)){
+    for(int x = 0; x <= height; x++){
+		for(int y = 0; y <= width ; y++){
+			if( (x == 0) || (y == 0) || (y == width) || (x == height)){
 				//DONE: Borders 
                 goToXY(x,y);
 				printf("%c%c",RECT_CHAR, RECT_CHAR);
@@ -188,5 +190,6 @@ void drawTetromino(Tetromino tetromino, short x, short y){
     }
 }
 
-
-
+void clearScreen() {
+    system("cls"); // Clears the console screen (Windows-specific)
+}
