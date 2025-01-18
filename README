@@ -1,4 +1,3 @@
-
 # 🎮 Tetris Clone
 
 ```
@@ -57,7 +56,7 @@ This is a simple yet fun Tetris clone written in C, using the `windows.h` librar
 2. **Steps**:
    - Clone the repository:
      ```bash
-     git clone https://github.com/AbdElMalek-L/tetris-clone.git
+     git clone https://github.com/AbdElMalek-L/console-tetris.git
      ```
    - Navigate to the project directory:
      ```bash
