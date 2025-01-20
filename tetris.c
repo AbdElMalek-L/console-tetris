@@ -8,7 +8,7 @@
 
 #define SCREEN_WIDTH 500
 #define SCREEN_HEIGHT 600
-#define BOARD_HEIGHT 30 
+#define BOARD_HEIGHT 32 
 #define BOARD_WIDTH 60 // normalment hna khasha tkon 30 walakin the 178 character am working with is too thin.{}
 
 #define RECT_CHAR 178
@@ -64,7 +64,33 @@ Tetromino tetrominos[7] = {
     // Add other Tetrominos
 };
 
-   //TODO: the rest of TETROMINOS
+Tetromino cureent_tetromino =   { { {0,0,0,0}, 
+                                    {0,0,0,0},
+                                    {0,0,0,0},
+                                    {0,0,0,0} }, 6 };
+
+short game_matrix[20][15] = {
+    {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
+    {0, 0, 0, 1, 3, 4, 4, 4, 3, 0, 0, 0, 0, 0, 0,},
+    {0, 2, 0, 1, 3, 3, 5, 4, 3, 3, 0, 0, 0, 0, 0,},
+    {2, 2, 2, 1, 0, 3, 5, 5, 5, 3, 0, 0, 0, 1, 4,}
+};
 
 void setConsoleSize(int width, int height);
 void goToXY(short x, short y);
@@ -72,9 +98,15 @@ void drawBorders(int width, int height);
 void drawWelcomePage(int width, int height);
 void waitForNextFrame(short hz);
 void setTextColor(short color);
-void drawTetromino(Tetromino tetromino, short x, short y);
+void drawTetromino(Tetromino tetromino, short x, short y); //DELET THIS
 void clearScreen();
 void drawBorders(int width, int height);
+void drawPlayBoard();
+void drawGame();
+void resetGame();
+void rotateTetromino(short derection);
+void placeTetromino(int vertical_position,int horizontal_position);
+
 
 boolean game_exit = 0;
 boolean game_over = 0;
@@ -84,31 +116,35 @@ boolean game_over = 0;
 int main() {
     setConsoleSize(SCREEN_WIDTH, SCREEN_HEIGHT);
     int time = clock(); // Initialize timing
-    int topPosition = 0; // Initialize Tetromino position
+    int horizontal_position = 0;
+    int vertical_position = 0; // Initialize Tetromino position
 
     drawWelcomePage(BOARD_WIDTH, BOARD_HEIGHT);
 
     while(!game_exit){
         if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
-        while (!game_over) {
-            // Check if Tetromino is within bounds and enough time has passed
-            if (topPosition < BOARD_HEIGHT - 3 && clock() > time + 300) {
-                clearScreen();
-                drawBorders(BOARD_HEIGHT,BOARD_WIDTH );
-                drawTetromino(tetrominos[0], topPosition, 2); // Draw Tetromino
-                drawTetromino(tetrominos[4], topPosition, 18); // Draw another Tetromino
-                drawTetromino(tetrominos[1], topPosition, 30); // Draw another Tetromino
-                time = clock(); // Reset the timer
-                topPosition += 1; // Move Tetromino down
+            clearScreen();
+            drawPlayBoard();
+            resetGame();
+
+            while (!game_over) {
+                // Check if Tetromino is within bounds and enough time has passed
+                if (vertical_position < 20 - 3 && clock() > time + 300) {
+                    cureent_tetromino = tetrominos[3];
+                    time = clock(); // Reset the timer
+                    vertical_position += 1; // Move Tetromino down
+                    placeTetromino(vertical_position,horizontal_position);
+                    drawGame();
+                }
+                if(GetAsyncKeyState())
+                waitForNextFrame(10); // Control frame rate
+
             }
-            waitForNextFrame(10); // Control frame rate
-
-        }
 
     }
 
     }
-    // Check if 'A' key is pressed
+
 
     return 0;
 }
@@ -178,6 +214,7 @@ void drawTetrisLogo(){
                     case 2: setTextColor(COLOR_GREEN); break;
                     case 3: setTextColor(COLOR_MAGENTA); break;
                     case 4: setTextColor(COLOR_RED); break;
+                    case 5: setTextColor(COLOR_YELLOW); break;
                 }
                 
                 goToXY(y*2+8,x+6 );
@@ -188,6 +225,104 @@ void drawTetrisLogo(){
         }
     }
 }
+
+void drawPlayBoard() {
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (
+                (y >= 3 && y <= 5 && x >= 22 && x <= 42) ||   // score box
+                (y >= 8 && y <= 27 && x >= 6 && x <= 36) ||   // play box
+                (y >= 11 && y <= 17 && x >= 40 && x <= 58) || // next icon box
+                (y >= 19 && y <= 21 && x >= 42 && x <= 56)    // next text box
+            ) {
+                printf("  "); // Draw rectangle
+            } else {
+                goToXY(x, y);
+                printf("%c%c", RECT_CHAR, RECT_CHAR);
+            }
+        }
+    }
+}
+
+void drawGame(){
+    for(int y = 0; y < 20; y++){
+        for(int x = 0;x < 15; x++){
+            if(game_matrix[y][x] != 0 ){
+
+                switch (game_matrix[y][x]) {
+                    case 1: setTextColor(COLOR_MAGENTA ); break;
+                    case 2: setTextColor(COLOR_GREEN ); break;
+                    case 3: setTextColor(COLOR_BLUE ); break;
+                    case 4: setTextColor(COLOR_RED ); break;
+                    case 5: setTextColor(COLOR_YELLOW ); break;
+
+                }
+                
+                goToXY(x*2+7,y+8 );
+				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
+                setTextColor(COLOR_DEFAULT); // Reset to default color
+
+            } else {
+                goToXY(x*2+7,y+8 );
+                printf("  ");
+            }
+        }
+    }
+}
+
+void resetGame(){
+        for(int y = 0; y < 20; y++){
+            for(int x = 0;x < 15; x++){
+                game_matrix[y][x] = 0;
+            }
+        }
+}
+
+void rotateTetromino(short derection){
+    Tetromino temp_tetromino;
+
+    if(derection == 1){ // clockwise
+        for(int x = 0; x < 4; x++){
+            for(int y = 0; y < 4; y++){
+                temp_tetromino.shape[y][3 - x] = cureent_tetromino.shape[x][y];
+            }
+        }
+        for(int x = 0; x < 4; x++){
+            for(int y = 0; y < 4; y++){
+                cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
+            }
+        }
+    }
+        if(derection == 2){ // anticlockwise
+        for(int x = 0; x < 4; x++){
+            for(int y = 0; y < 4; y++){
+                temp_tetromino.shape[3 - y][x] = cureent_tetromino.shape[x][y];
+            }
+        }
+        for(int x = 0; x < 4; x++){
+            for(int y = 0; y < 4; y++){
+                cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
+            }
+        }
+    }
+
+}
+
+void placeTetromino(int vertical_position,int horizontal_position){
+    for(int y = 0; y < 20; y++){
+        for(int x = 0;x < 15; x++){
+            if(y == vertical_position && x == horizontal_position){
+                game_matrix[y-1][x-1] = 0;
+                for(int i = 0; i < 4; i++){
+                    for(int j = 0; j < 4; j++){
+                        
+                        game_matrix[y+3-i][x+3-j] = cureent_tetromino.shape[3-i][3-j];
+                        
+                    }
+                }
+            }
+        }
+    }}
 
 void drawWelcomePage(int height, int width) {
     drawBorders(width, height);
