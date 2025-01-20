@@ -104,20 +104,27 @@ void drawBorders(int width, int height);
 void drawPlayBoard();
 void drawGame();
 void resetGame();
-void rotateTetromino(short derection);
+void rotateTetromino();
 void placeTetromino(int vertical_position,int horizontal_position);
+void drawNext();
 
 
-boolean game_exit = 0;
-boolean game_over = 0;
-
-
+    int score = 0;
+    int next = 4;
 
 int main() {
+
     setConsoleSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
     int time = clock(); // Initialize timing
     int horizontal_position = 0;
     int vertical_position = 0; // Initialize Tetromino position
+
+    cureent_tetromino = tetrominos[3];
+
+    boolean game_exit = 0;
+    boolean game_over = 0;
+
 
     drawWelcomePage(BOARD_WIDTH, BOARD_HEIGHT);
 
@@ -129,14 +136,16 @@ int main() {
 
             while (!game_over) {
                 // Check if Tetromino is within bounds and enough time has passed
-                if (vertical_position < 20 - 3 && clock() > time + 300) {
-                    cureent_tetromino = tetrominos[3];
+                if (vertical_position < 20 - 3 && clock() > time + 600) {
                     time = clock(); // Reset the timer
                     vertical_position += 1; // Move Tetromino down
                     placeTetromino(vertical_position,horizontal_position);
                     drawGame();
+                    drawNext();
                 }
-                if(GetAsyncKeyState())
+                if(GetAsyncKeyState(VK_UP) & 0x8000){
+                    rotateTetromino();
+                }
                 waitForNextFrame(10); // Control frame rate
 
             }
@@ -268,6 +277,38 @@ void drawGame(){
             }
         }
     }
+    goToXY(28,4);
+    printf("Score: %d", score);
+
+    goToXY(45,20);
+
+    printf("Next: %d", next);
+}
+
+void drawNext(){
+    for(int x = 0; x < 4; x++){
+        for(int y = 0; y < 4; y++){
+            if(tetrominos[next].shape[x][y] != 0){
+
+                switch (tetrominos[next].shape[x][y]) {
+                    case 1: setTextColor(COLOR_MAGENTA ); break;
+                    case 2: setTextColor(COLOR_GREEN ); break;
+                    case 3: setTextColor(COLOR_BLUE ); break;
+                    case 4: setTextColor(COLOR_RED ); break;
+                    case 5: setTextColor(COLOR_YELLOW ); break;
+
+                }
+                
+                goToXY(x*2+44,y+12 );
+				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
+                setTextColor(COLOR_DEFAULT); // Reset to default color
+
+            } else {
+                goToXY(x*2+7,y+8 );
+                printf("  ");
+            }
+        }
+    }
 }
 
 void resetGame(){
@@ -278,22 +319,22 @@ void resetGame(){
         }
 }
 
-void rotateTetromino(short derection){
+void rotateTetromino(){
     Tetromino temp_tetromino;
 
-    if(derection == 1){ // clockwise
-        for(int x = 0; x < 4; x++){
-            for(int y = 0; y < 4; y++){
-                temp_tetromino.shape[y][3 - x] = cureent_tetromino.shape[x][y];
-            }
-        }
-        for(int x = 0; x < 4; x++){
-            for(int y = 0; y < 4; y++){
-                cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
-            }
-        }
-    }
-        if(derection == 2){ // anticlockwise
+
+        // for(int x = 0; x < 4; x++){
+        //     for(int y = 0; y < 4; y++){
+        //         temp_tetromino.shape[y][3 - x] = cureent_tetromino.shape[x][y];
+        //     }
+        // }
+        // for(int x = 0; x < 4; x++){
+        //     for(int y = 0; y < 4; y++){
+        //         cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
+        //     }
+        // }
+    
+// anticlockwise
         for(int x = 0; x < 4; x++){
             for(int y = 0; y < 4; y++){
                 temp_tetromino.shape[3 - y][x] = cureent_tetromino.shape[x][y];
@@ -304,7 +345,7 @@ void rotateTetromino(short derection){
                 cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
             }
         }
-    }
+    
 
 }
 
@@ -312,14 +353,16 @@ void placeTetromino(int vertical_position,int horizontal_position){
     for(int y = 0; y < 20; y++){
         for(int x = 0;x < 15; x++){
             if(y == vertical_position && x == horizontal_position){
-                game_matrix[y-1][x-1] = 0;
                 for(int i = 0; i < 4; i++){
                     for(int j = 0; j < 4; j++){
                         
                         game_matrix[y+3-i][x+3-j] = cureent_tetromino.shape[3-i][3-j];
-                        
+
+                        game_matrix[y-1][x+3-j] = 0;
                     }
                 }
+                
+
             }
         }
     }}
