@@ -4,6 +4,7 @@
 *A nostalgic console-based Tetris adventure with a retro twist!*
 *as **Cheb Alärbi** always says: `wah alyyam wah`.*  
 
+![Tetris welcome screen!](Tetris_splash.jpg "Tetris")
 ---
 
 ## 🕹️ **What is this?**  
