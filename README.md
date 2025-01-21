@@ -1,114 +1,69 @@
-# 🎮 Tetris Clone
 
-```
-    ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓    ▓▓▓▓▓▓  ▓▓▓▓▓▓  
-      ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓    ▓▓      
-      ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓▓▓ 
-      ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓        ▓▓ 
-      ▓▓    ▓▓▓▓▓▓    ▓▓    ▓▓  ▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓ 
-
-```
-
-**By AbdElMalek-L**  
-*A classic Tetris clone built with passion and nostalgia.*
+# 🎮 CLI Tetris clone  🚀  
+  
+*A nostalgic console-based Tetris adventure with a retro twist!*
+*as **Cheb Alärbi** always says: `wah alyyam wah`.*  
 
 ---
 
-## Table of Contents
-1. [About the Project](#about-the-project)
-2. [Features](#features)
-3. [How to Play](#how-to-play)
-4. [Installation](#installation)
-5. [Controls](#controls)
-6. [Dependencies](#dependencies)
-7. [Contributing](#contributing)
-8. [License](#license)
+## 🕹️ **What is this?**  
+Relive the golden era of gaming with this terminal-based Tetris clone! Built in C, it’s packed with colorful blocks, smooth controls, and that classic *"just one more round"* vibe. Perfect for quick breaks or coding inspiration!  
 
 ---
 
-## About the Project
-This is a simple yet fun Tetris clone written in C, using the `windows.h` library for console manipulation. It’s a tribute to the timeless puzzle game that has entertained millions of players worldwide. Whether you're a fan of retro games or just looking to learn about game development, this project is for you!
+## ✨ **Features**  
+- 🟦 **7 Classic Tetromino Shapes**: I, T, S, Z, L, J, O — all here!  
+- 🎨 **Vibrant Colors**: Blocks pop in magenta, green, blue, red, and yellow.  
+- 🔄 **Rotate & Move**: Spin blocks with a tap, slide them left/right.  
+- 🔮 **Next Piece Preview**: Plan your strategy like a pro!  
+- 📊 **Score Tracking**: How high can you climb?  
+- 🖌️ **Retro Console Art**: ASCII borders and a snazzy Tetris logo.  
 
 ---
 
-## Features
-- **Classic Tetrominos**: All 7 Tetromino shapes (I, O, T, S, Z, J, L) are here, just like in the original game.
-- **Colorful Blocks**: Each Tetromino has its own vibrant color to make the game visually appealing.
-- **Collision Detection**: The game ensures Tetrominos don’t overlap or go out of bounds.
-- **Line Clearing**: Complete lines to score points and keep the board clean.
-- **Simple Controls**: Easy-to-learn controls for moving and rotating Tetrominos.
-- **Welcome Screen**: A cool welcome screen featuring the Tetris logo to set the mood.
+## 🕹️ **Controls**  
+- **ENTER**: Start/Pause Game  
+- **← → Arrows**: Move Left/Right  
+- **↑ Arrow**: Rotate Block  
+- **Q**: Quit Game  
 
 ---
 
-## How to Play
-1. **Goal**: Arrange the falling Tetrominos to complete horizontal lines without gaps.
-2. **Scoring**: Each completed line adds to your score. Clear multiple lines at once for bonus points!
-3. **Game Over**: The game ends when the Tetrominos stack up to the top of the board. How long can you last?
+## 🛠️ **Installation**  
+1. **Clone the repo**:  
+   ```bash  
+   git clone https://github.com/AbdElMalek-L/TETRIS_CLONE.git  
+   ```  
+2. **Compile** (Windows only — needs `windows.h`):  
+   ```bash  
+   gcc tetris.c -o tetris.exe  
+   ```  
+3. **Play!**  
+   ```bash  
+   ./tetris.exe  
+   ```  
 
 ---
 
-## Installation
-1. **Prerequisites**:
-   - A Windows operating system.
-   - A C compiler (e.g., GCC, MinGW, or Visual Studio).
+## 🎯 **How to Play**  
+1. **Stack ‘em up**: Fit blocks to clear lines.  
+2. **Speed up**: Blocks fall faster as you level up.  
+3. **Survive**: Don’t let blocks reach the top!  
 
-2. **Steps**:
-   - Clone the repository:
-     ```bash
-     git clone https://github.com/AbdElMalek-L/console-tetris.git
-     ```
-   - Navigate to the project directory:
-     ```bash
-     cd tetris-clone
-     ```
-   - Compile the game:
-     ```bash
-     gcc main.c -o tetris.exe
-     ```
-   - Run the game:
-     ```bash
-     ./tetris.exe
-     ```
+*Pro Tip: Master the S and Z spins for epic combos!*  
 
 ---
 
-## Controls
-- **← (Left Arrow)**: Move the Tetromino left.
-- **→ (Right Arrow)**: Move the Tetromino right.
-- **↓ (Down Arrow)**: Speed up the Tetromino's fall.
-- **↑ (Up Arrow)**: Rotate the Tetromino.
-- **Q**: Quit the game.
+## 🎉 **Ready to Play?**  
+Dive into the terminal, fire up the game, and chase that high score! Whether you’re here for the coding magic or the classic Tetris fun — **let’s get stacking!**  
 
 ---
 
-## Dependencies
-- **Windows API (`windows.h`)**: Used for console manipulation, like clearing the screen, moving the cursor, and adding colors.
-- **Standard C Libraries**: `stdio.h`, `stdlib.h`, `time.h`.
+## 🙏 **Credits**  
+Crafted with ❤️ by **AbdElMalek-L**.  
+*"For the love of pixels and infinite loops!"*  
+
 
 ---
 
-## Contributing
-Love Tetris? Want to improve this project? Contributions are welcome! Here’s how you can help:
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Commit your changes.
-4. Submit a pull request.
-
-Please make sure your code follows the existing style and includes comments where necessary.
-
----
-
-## License
-This project is licensed under the MIT License. Feel free to use, modify, and share it! See the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-- Inspired by the legendary Tetris game created by Alexey Pajitnov.
-- Thanks to the Windows API documentation for making console programming so accessible.
-
----
-
-Enjoy the game! If you have any questions, feedback, or just want to share your high score, feel free to reach out or open an issue. Let’s keep the Tetris spirit alive! 🎉
-
+**License**: Free to play, tweak, and share! (Credit the creator 💖)
