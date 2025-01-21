@@ -20,54 +20,38 @@
 #define COLOR_MAGENTA 5
 #define COLOR_DEFAULT 7 // Default console color
 
-
-
-
-
-
 typedef struct {
-    int shape[4][4]; // 4x4 grid for each Tetromino
+    int shape[3][3]; // 3x3 grid for each Tetromino
     int color;       // Color index
 } Tetromino;
 
 Tetromino tetrominos[7] = {
-    { { {0,0,0,0}, 
-        {1,1,1,1},
-        {0,0,0,0},
-        {0,0,0,0} }, 1 }, // I
-    { { {0,1,0,0},
-        {1,1,1,0},
-        {0,0,0,0},
-        {0,0,0,0} }, 2 }, // T
-    { { {0,1,1,0},
-        {1,1,0,0},
-        {0,0,0,0},
-        {0,0,0,0} }, 3 }, // S
-    { { {0,1,1,0},
-        {0,0,1,1},
-        {0,0,0,0},
-        {0,0,0,0} }, 4 }, // Z
-    { { {0,0,1,0},
-        {1,1,1,0},
-        {0,0,0,0},
-        {0,0,0,0} }, 5 }, // L
-    { { {1,1,1,0},
-        {0,0,1,0},
-        {0,0,0,0},
-        {0,0,0,0} }, 6 }, // J
-    { { {0,0,0,0},
-        {0,1,1,0},
-        {0,1,1,0},
-        {0,0,0,0} }, 6 }, // O
-
-
-    // Add other Tetrominos
+    { { {0,1,0}, 
+        {0,1,0},
+        {0,1,0} }, 1 }, // I
+    { { {0,1,0},
+        {1,1,1},
+        {0,0,0} }, 2 }, // T
+    { { {0,1,1},
+        {1,1,0},
+        {0,0,0} }, 3 }, // S
+    { { {1,1,0},
+        {0,1,1},
+        {0,0,0} }, 4 }, // Z
+    { { {0,0,1},
+        {1,1,1},
+        {0,0,0} }, 5 }, // L
+    { { {1,1,1},
+        {0,0,1},
+        {0,0,0} }, 6 }, // J
+    { { {1,1,0},
+        {1,1,0},
+        {0,0,0} }, 6 }, // O
 };
 
-Tetromino cureent_tetromino =   { { {0,0,0,0}, 
-                                    {0,0,0,0},
-                                    {0,0,0,0},
-                                    {0,0,0,0} }, 6 };
+Tetromino cureent_tetromino = { { {0,0,0}, 
+                                  {0,0,0},
+                                  {0,0,0} }, 6 };
 
 short game_matrix[20][15] = {
     {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5,},
@@ -108,23 +92,21 @@ void rotateTetromino();
 void placeTetromino(int vertical_position,int horizontal_position);
 void drawNext();
 
-
-    int score = 0;
-    int next = 4;
+int score = 0;
+int next = 3;
 
 int main() {
 
     setConsoleSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-
     int time = clock(); // Initialize timing
     int horizontal_position = 0;
     int vertical_position = 0; // Initialize Tetromino position
+    next = rand()%7;
 
     cureent_tetromino = tetrominos[3];
 
     boolean game_exit = 0;
     boolean game_over = 0;
-
 
     drawWelcomePage(BOARD_WIDTH, BOARD_HEIGHT);
 
@@ -134,26 +116,38 @@ int main() {
             drawPlayBoard();
             resetGame();
 
+
             while (!game_over) {
-                // Check if Tetromino is within bounds and enough time has passed
-                if (vertical_position < 20 - 3 && clock() > time + 600) {
+
+                if (vertical_position < 17 && clock() > time + 600) {
                     time = clock(); // Reset the timer
                     vertical_position += 1; // Move Tetromino down
-                    placeTetromino(vertical_position,horizontal_position);
                     drawGame();
                     drawNext();
+                    drawTetromino(cureent_tetromino, vertical_position, horizontal_position);
                 }
                 if(GetAsyncKeyState(VK_UP) & 0x8000){
                     rotateTetromino();
+                    drawGame();
+                    drawTetromino(cureent_tetromino, vertical_position, horizontal_position);
+
+                }
+                if(GetAsyncKeyState(VK_LEFT) & 0x8000 && horizontal_position > 0 ){
+                    horizontal_position--;
+                    drawGame();
+                    drawTetromino(cureent_tetromino, vertical_position, horizontal_position);
+
+                }
+                if(GetAsyncKeyState(VK_RIGHT) & 0x8000 && horizontal_position < 12){
+                    horizontal_position++;
+                    drawGame();
+                    drawTetromino(cureent_tetromino, vertical_position, horizontal_position);
+
                 }
                 waitForNextFrame(10); // Control frame rate
-
             }
-
+        }
     }
-
-    }
-
 
     return 0;
 }
@@ -170,7 +164,6 @@ void setConsoleSize(int width, int height) {
     COORD newSize;
     newSize.X = width;
     newSize.Y = height;
-
 }
 
 void setTextColor(short color) {
@@ -179,7 +172,6 @@ void setTextColor(short color) {
 }
 
 void goToXY(short x, short y) {
-
     HANDLE hConsoleOutput;
     COORD Cursor_Pos = {x,y};
 
@@ -195,15 +187,14 @@ void waitForNextFrame(short hz){
 
 void drawBorders(int width, int height){
     for(int x = 0; x <= height; x++){
-		for(int y = 0; y < width ; y++){
-			if( (x == 0) || (y == 0) || (y == width-1) || (x == height)){
-				//DONE: Borders 
+        for(int y = 0; y < width ; y++){
+            if( (x == 0) || (y == 0) || (y == width-1) || (x == height)){
+                //DONE: Borders 
                 goToXY(x,y);
-				printf("%c%c",RECT_CHAR, RECT_CHAR);
-			}
-			
-		}
-	}
+                printf("%c%c",RECT_CHAR, RECT_CHAR);
+            }
+        }
+    }
 }
 
 void drawTetrisLogo(){
@@ -215,9 +206,8 @@ void drawTetrisLogo(){
         {0,1,0,0,2,2,2,0,0,1,0,0,3,0,3,0,4,4,4,0,2,2,2}
     };
     for(int x = 0; x < 5; x++){
-		for(int y = 0; y < 23; y++){
-			if(0 != TETRIS_LOGO[x][y]){
-
+        for(int y = 0; y < 23; y++){
+            if(0 != TETRIS_LOGO[x][y]){
                 switch (TETRIS_LOGO[x][y]) {
                     case 1: setTextColor(COLOR_BLUE ); break;
                     case 2: setTextColor(COLOR_GREEN); break;
@@ -225,11 +215,9 @@ void drawTetrisLogo(){
                     case 4: setTextColor(COLOR_RED); break;
                     case 5: setTextColor(COLOR_YELLOW); break;
                 }
-                
                 goToXY(y*2+8,x+6 );
-				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
+                printf("%c%c" ,RECT_CHAR, RECT_CHAR);
                 setTextColor(COLOR_DEFAULT); // Reset to default color
-
             }
         }
     }
@@ -257,20 +245,16 @@ void drawGame(){
     for(int y = 0; y < 20; y++){
         for(int x = 0;x < 15; x++){
             if(game_matrix[y][x] != 0 ){
-
                 switch (game_matrix[y][x]) {
                     case 1: setTextColor(COLOR_MAGENTA ); break;
                     case 2: setTextColor(COLOR_GREEN ); break;
                     case 3: setTextColor(COLOR_BLUE ); break;
                     case 4: setTextColor(COLOR_RED ); break;
                     case 5: setTextColor(COLOR_YELLOW ); break;
-
                 }
-                
                 goToXY(x*2+7,y+8 );
-				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
+                printf("%c%c" ,RECT_CHAR, RECT_CHAR);
                 setTextColor(COLOR_DEFAULT); // Reset to default color
-
             } else {
                 goToXY(x*2+7,y+8 );
                 printf("  ");
@@ -281,30 +265,25 @@ void drawGame(){
     printf("Score: %d", score);
 
     goToXY(45,20);
-
     printf("Next: %d", next);
 }
 
 void drawNext(){
-    for(int x = 0; x < 4; x++){
-        for(int y = 0; y < 4; y++){
+    for(int x = 0; x < 3; x++){
+        for(int y = 0; y < 3; y++){
             if(tetrominos[next].shape[x][y] != 0){
-
-                switch (tetrominos[next].shape[x][y]) {
+                switch (tetrominos[next].color) {
                     case 1: setTextColor(COLOR_MAGENTA ); break;
                     case 2: setTextColor(COLOR_GREEN ); break;
                     case 3: setTextColor(COLOR_BLUE ); break;
                     case 4: setTextColor(COLOR_RED ); break;
                     case 5: setTextColor(COLOR_YELLOW ); break;
-
                 }
-                
-                goToXY(x*2+44,y+12 );
-				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
+                goToXY(x*2+47,y+13 );
+                printf("%c%c" ,RECT_CHAR, RECT_CHAR);
                 setTextColor(COLOR_DEFAULT); // Reset to default color
-
             } else {
-                goToXY(x*2+7,y+8 );
+                goToXY(x*2+47,y+13 );
                 printf("  ");
             }
         }
@@ -312,60 +291,46 @@ void drawNext(){
 }
 
 void resetGame(){
-        for(int y = 0; y < 20; y++){
-            for(int x = 0;x < 15; x++){
-                game_matrix[y][x] = 0;
-            }
+    for(int y = 0; y < 20; y++){
+        for(int x = 0;x < 15; x++){
+            game_matrix[y][x] = 0;
         }
+    }
 }
 
 void rotateTetromino(){
     Tetromino temp_tetromino;
 
-
-        // for(int x = 0; x < 4; x++){
-        //     for(int y = 0; y < 4; y++){
-        //         temp_tetromino.shape[y][3 - x] = cureent_tetromino.shape[x][y];
-        //     }
-        // }
-        // for(int x = 0; x < 4; x++){
-        //     for(int y = 0; y < 4; y++){
-        //         cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
-        //     }
-        // }
-    
-// anticlockwise
-        for(int x = 0; x < 4; x++){
-            for(int y = 0; y < 4; y++){
-                temp_tetromino.shape[3 - y][x] = cureent_tetromino.shape[x][y];
-            }
+    // Rotate the Tetromino 90 degrees clockwise
+    for(int x = 0; x < 3; x++){
+        for(int y = 0; y < 3; y++){
+            temp_tetromino.shape[y][2 - x] = cureent_tetromino.shape[x][y];
         }
-        for(int x = 0; x < 4; x++){
-            for(int y = 0; y < 4; y++){
-                cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
-            }
+    }
+    for(int x = 0; x < 3; x++){
+        for(int y = 0; y < 3; y++){
+            cureent_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
         }
-    
-
+    }
 }
 
 void placeTetromino(int vertical_position,int horizontal_position){
     for(int y = 0; y < 20; y++){
         for(int x = 0;x < 15; x++){
             if(y == vertical_position && x == horizontal_position){
-                for(int i = 0; i < 4; i++){
-                    for(int j = 0; j < 4; j++){
-                        
-                        game_matrix[y+3-i][x+3-j] = cureent_tetromino.shape[3-i][3-j];
+                for(int i = 0; i < 3; i++){
+                    for(int j = 0; j < 3; j++){
+                        game_matrix[y+i][x+j] = cureent_tetromino.shape[i][j];
+                        // if(game_matrix[y-1][x+j] == cureent_tetromino.color){
+                            game_matrix[y-1][x+j] =  0;
+                        // }
 
-                        game_matrix[y-1][x+3-j] = 0;
                     }
                 }
-                
-
             }
         }
-    }}
+    }
+}
 
 void drawWelcomePage(int height, int width) {
     drawBorders(width, height);
@@ -382,37 +347,38 @@ void drawWelcomePage(int height, int width) {
     printf("Up Arrow:       Rotate the Tetromino.");
     goToXY(5,20);
     printf("Q:              Quit the game.");
-    goToXY(BOARD_WIDTH - 20,BOARD_HEIGHT-2);
-    setTextColor(COLOR_GREEN );
-    printf("by AbdElMalek-L");
+    goToXY(BOARD_WIDTH - 31,BOARD_HEIGHT-2);
+    setTextColor(COLOR_BLUE );    
+    printf("~Made by ");
+    setTextColor(COLOR_DEFAULT); 
+    printf("@AbdElMalek-L ");
+    setTextColor(COLOR_BLUE );    
+    printf("with ");
+    setTextColor(COLOR_RED);
+    printf("<3");
     setTextColor(COLOR_DEFAULT); // Reset to default color
-
 }
 
 void drawTetromino(Tetromino tetromino, short x, short y){
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
+    x += 8;
+    y = y*2+7;
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
             if(tetromino.shape[i][j] != 0){
-
                 switch (tetromino.color) {
-                    case 1: setTextColor(COLOR_BLUE ); break;
-                    case 2: setTextColor(COLOR_GREEN); break;
-                    case 3: setTextColor(COLOR_YELLOW); break;
-                    case 4: setTextColor(COLOR_RED); break;
+                    case 1: setTextColor(COLOR_MAGENTA ); break;
+                    case 2: setTextColor(COLOR_GREEN ); break;
+                    case 3: setTextColor(COLOR_BLUE ); break;
+                    case 4: setTextColor(COLOR_RED ); break;
+                    case 5: setTextColor(COLOR_YELLOW ); break;
                 }
-                
-                goToXY(j*4+y,i*2+x);
-				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
-				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
-                goToXY(j*4+y,i*2+x+1);
+                goToXY(j*2+y,i+x);
                 printf("%c%c" ,RECT_CHAR, RECT_CHAR);
-				printf("%c%c" ,RECT_CHAR, RECT_CHAR);
+
                 setTextColor(COLOR_DEFAULT); // Reset to default color
-
-                /*
-                    ▓▓▓▓
-                */
-
+            }else{
+                goToXY(j*2+y,i+x);
+                printf("  ");
             }
         }
     }
@@ -421,7 +387,6 @@ void drawTetromino(Tetromino tetromino, short x, short y){
 void clearScreen() {
     system("cls"); // Clears the console screen (Windows-specific)
 }
-
 /*
 
 ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓0
