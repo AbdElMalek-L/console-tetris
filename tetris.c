@@ -5,11 +5,12 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <time.h>
+#include <stdbool.h>
 
-#define SCREEN_WIDTH 500
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 60
+#define SCREEN_HEIGHT 30
 #define BOARD_HEIGHT 32 
-#define BOARD_WIDTH 60 // normalment hna khasha tkon 30 walakin the 178 character am working with is too thin.{}
+#define BOARD_WIDTH 60
 
 #define RECT_CHAR 178
 
@@ -17,8 +18,10 @@
 #define COLOR_GREEN   10
 #define COLOR_YELLOW  14
 #define COLOR_BLUE    9
-#define COLOR_MAGENTA 5
-#define COLOR_DEFAULT 7 // Default console color
+#define COLOR_CYAN    11
+#define COLOR_MAGENTA 13
+#define COLOR_DEFAULT 7
+
 
 typedef struct {
     int shape[3][3]; // 3x3 grid for each Tetromino
@@ -49,9 +52,7 @@ Tetromino tetrominos[7] = {
         {0,0,0} }, 6 }, // O
 };
 
-Tetromino current_tetromino = { { {0,0,0}, 
-                                  {0,0,0},
-                                  {0,0,0} }, 6 };
+
 
 short game_matrix[20][15] = {
     {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5,},
@@ -89,82 +90,86 @@ void drawPlayBoard();
 void drawGame();
 void resetGame();
 void rotateTetromino();
-void placeTetromino(int vertical_position,int horizontal_position);
+void placeTetromino();
 void drawNext();
-void moveTetromino(short derection, short vertical_position, short horizontal_position);
+void moveTetromino(int dx, int dy);
+bool checkCollision(int new_x, int new_y, Tetromino *t);
+
+Tetromino current_tetromino = { { {0,0,0}, 
+                                  {0,0,0},
+                                  {0,0,0} }, 6 };
+int current_x, current_y;
+int next_piece;
+
+int next = 0;
 
 int score = 0;
-int next = 3;
 
 int main() {
-
+    srand(time(NULL));
     setConsoleSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-    int time = clock(); // Initialize timing
-    int horizontal_position = 0;
-    int vertical_position = 0; // Initialize Tetromino position
-    next = rand()%7;
+    resetGame();
 
-    current_tetromino = tetrominos[3];
-
-    boolean game_exit = 0;
-    boolean game_over = 0;
+    bool game_exit = false;
+    bool game_over = false;
+    int lastFall = clock();
 
     drawWelcomePage(BOARD_WIDTH, BOARD_HEIGHT);
 
-    while(!game_exit){
+    while (!game_exit) {
         if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
-            clearScreen();
-            drawPlayBoard();
-            //resetGame();
-
-
-            while (!game_over) {
-
-                if (vertical_position < 17 && clock() > time + 600) {
-                    time = clock(); // Reset the timer
-                    drawGame();
-                    drawNext();
-                    moveTetromino(1, vertical_position, horizontal_position);
+            // Game loop
+            while (!game_exit && !game_over) {
+                if (clock() > lastFall + 1000) {
+                    moveTetromino(0, 1);
+                    lastFall = clock();
                 }
-                if(GetAsyncKeyState(VK_UP) & 0x8000){
+
+                // Handle input
+                if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
+                    moveTetromino(-1, 0);
+                }
+                if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
+                    moveTetromino(1, 0);
+                }
+                if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+                    moveTetromino(0, 1);
+                }
+                if (GetAsyncKeyState(VK_UP) & 0x8000) {
                     rotateTetromino();
-                    drawGame();
-                    drawTetromino(current_tetromino, vertical_position, horizontal_position);
-
                 }
-                if(GetAsyncKeyState(VK_LEFT) & 0x8000 && horizontal_position > 0 ){
-                    horizontal_position--;
-                    drawGame();
-                    drawTetromino(current_tetromino, vertical_position, horizontal_position);
-
+                if (GetAsyncKeyState('Q') & 0x8000) {
+                    game_exit = true;
                 }
-                if(GetAsyncKeyState(VK_RIGHT) & 0x8000 && horizontal_position < 12){
-                    horizontal_position++;
-                    drawGame();
-                    drawTetromino(current_tetromino, vertical_position, horizontal_position);
 
-                }
-                waitForNextFrame(10); // Control frame rate
+                // Draw
+                clearScreen();
+                drawPlayBoard();
+                drawGame();
+                drawTetromino(current_tetromino, current_x, current_y);
+                drawNext();
+                waitForNextFrame(30);
             }
         }
+        // Handle other cases (menu, exit)
+        waitForNextFrame(30);
     }
-
     return 0;
 }
 
-void setConsoleSize(int width, int height) {
-    HWND console = GetConsoleWindow();
+// void setConsoleSize(int width, int height) {
+//     HWND console = GetConsoleWindow();
 
-    RECT r;
-    GetWindowRect(console, &r);
-    MoveWindow(console, r.left, r.top, width, height, TRUE);
+//     RECT r;
+//     GetWindowRect(console, &r);
+//     MoveWindow(console, r.left, r.top, width, height, TRUE);
 
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+//     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    COORD newSize;
-    newSize.X = width;
-    newSize.Y = height;
-}
+//     COORD newSize;
+//     newSize.X = width;
+//     newSize.Y = height;
+// }
 
 void setTextColor(short color) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -290,45 +295,51 @@ void drawNext(){
     }
 }
 
-void resetGame(){
-    for(int y = 0; y < 20; y++){
-        for(int x = 0;x < 15; x++){
-            game_matrix[y][x] = 0;
+void resetGame() {
+    memset(game_matrix, 0, sizeof(game_matrix));
+    score = 0;
+    next_piece = rand() % 7;
+    current_tetromino = tetrominos[next_piece];
+    current_x = 6; // Centered
+    current_y = 0;
+    next_piece = rand() % 7;
+}
+
+void rotateTetromino() {
+    Tetromino temp = current_tetromino;
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            temp.shape[y][x] = current_tetromino.shape[3 - x - 1][y];
         }
+    }
+    // Check if rotation is possible
+    if (!checkCollision(current_x, current_y, &temp)) {
+        current_tetromino = temp;
     }
 }
 
-void rotateTetromino(){
-    Tetromino temp_tetromino;
-
-    // Rotate the Tetromino 90 degrees clockwise
-    for(int x = 0; x < 3; x++){
-        for(int y = 0; y < 3; y++){
-            temp_tetromino.shape[y][2 - x] = current_tetromino.shape[x][y];
-        }
-    }
-    for(int x = 0; x < 3; x++){
-        for(int y = 0; y < 3; y++){
-            current_tetromino.shape[x][y] = temp_tetromino.shape[x][y];
-        }
-    }
-}
-
-void placeTetromino(int vertical_position,int horizontal_position){
-    for(int y = 0; y < 20; y++){
-        for(int x = 0;x < 15; x++){
-            if(y == vertical_position && x == horizontal_position){
-                for(int i = 0; i < 3; i++){
-                    for(int j = 0; j < 3; j++){
-                        game_matrix[y+i][x+j] = current_tetromino.shape[i][j];
-                        // if(game_matrix[y-1][x+j] == current_tetromino.color){
-                            game_matrix[y-1][x+j] =  0;
-                        // }
-
-                    }
+void placeTetromino() {
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            if (current_tetromino.shape[y][x]) {
+                if (current_y + y < 0) {
+                    // Game Over
+                    return;
                 }
+                game_matrix[current_y + y][current_x + x] = current_tetromino.color;
             }
         }
+    }
+    // Check for line clears
+    // ... [Implement line clearing logic] ...
+    // Spawn new piece
+    current_tetromino = tetrominos[next_piece];
+    next_piece = rand() % 7;
+    current_x = 6;
+    current_y = 0;
+    if (checkCollision(current_x, current_y, &current_tetromino)) {
+        // Game Over
+        resetGame();
     }
 }
 
@@ -390,128 +401,106 @@ void clearScreen() {
     system("cls"); // Clears the console screen (Windows-specific)
 }
 
-void moveTetromino(short derection, short vertical_position, short horizontal_position){
-    switch (derection){
-        case 1: //down
-            if ((game_matrix[vertical_position+1][horizontal_position] == 0 || current_tetromino.shape[2][0] == 0)   &&
-                (game_matrix[vertical_position+1][horizontal_position+1] == 0 || current_tetromino.shape[2][1] == 0) &&
-                (game_matrix[vertical_position+1][horizontal_position+2] == 0 || current_tetromino.shape[2][2] == 0)
-            ){
-                vertical_position++;
-                drawTetromino(current_tetromino,vertical_position, horizontal_position);
-            }
+void moveTetromino(int dx, int dy) {
+    if (!checkCollision(current_x + dx, current_y + dy, &current_tetromino)) {
+        current_x += dx;
+        current_y += dy;
+    } else if (dy == 1) {
+        placeTetromino();
     }
 }
+bool checkCollision(int new_x, int new_y, Tetromino *t) {
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            if (t->shape[y][x]) {
+                int board_x = new_x + x;
+                int board_y = new_y + y;
+                if (board_x < 0 || board_x >= 15 || board_y >= 20)
+                    return true;
+                if (board_y >= 0 && game_matrix[board_y][board_x])
+                    return true;
+            }
+        }
+    }
+    return false;
+}
 
-/*
+/*********************************************************************/
 
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓0
-▓▓                                                          ▓▓1
-▓▓                                                          ▓▓2
-▓▓                                                          ▓▓3
-▓▓                                                          ▓▓4
-▓▓                                                          ▓▓5
-▓▓      ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓    ▓▓▓▓▓▓  ▓▓▓▓▓▓      ▓▓6
-▓▓        ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓    ▓▓          ▓▓7
-▓▓        ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓      ▓▓    ▓▓▓▓▓▓      ▓▓8
-▓▓        ▓▓    ▓▓        ▓▓    ▓▓  ▓▓    ▓▓        ▓▓      ▓▓9
-▓▓        ▓▓    ▓▓▓▓▓▓    ▓▓    ▓▓  ▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓      ▓▓10
-▓▓                                                          ▓▓11
-▓▓                                                          ▓▓12
-▓▓                                                          ▓▓13
-▓▓                                                          ▓▓14
-▓▓   Enter:          To start the game.                     ▓▓15
-▓▓   Left Arrow:     Move the Tetromino left.               ▓▓16
-▓▓   Right Arrow:    Move the Tetromino right.              ▓▓17
-▓▓   Down Arrow:     Speed up the Tetromino's fall.         ▓▓18
-▓▓   Up Arrow:       Rotate the Tetromino.                  ▓▓19
-▓▓   Q:              Quit the game.                         ▓▓20
-▓▓                                                          ▓▓21
-▓▓                                                          ▓▓22
-▓▓                                                          ▓▓23
-▓▓                                                          ▓▓24
-▓▓                                                          ▓▓25
-▓▓                                                          ▓▓26
-▓▓                                                          ▓▓27
-▓▓                                                          ▓▓28
-▓▓                                                          ▓▓29
-▓▓                                                          ▓▓30
-▓▓                                                          ▓▓31
-▓▓                                                          ▓▓32
-▓▓                                                          ▓▓33
-▓▓                                                          ▓▓34
-▓▓                                                          ▓▓35
-▓▓                                                          ▓▓36
-▓▓                                                          ▓▓37
-▓▓                                      by AbdElMalek-L     ▓▓38
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓39
+// typedef struct {
+//     int shape[4][4]; // Adjusted to 4x4 for 'I' piece
+//     int color;
+//     int width, height;
+// } Tetromino;
 
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓0  
-▓▓                                                          ▓▓11
-▓▓                                                          ▓▓12
-▓▓                                                          ▓▓13
-▓▓                                                          ▓▓14
-▓▓                                                          ▓▓15
-▓▓        00                                                ▓▓16
-▓▓        99                                                ▓▓17
-▓▓        88                                                ▓▓18
-▓▓        77                                                ▓▓19
-▓▓        66                                                ▓▓20
-▓▓        55                                                ▓▓21
-▓▓        44                                                ▓▓22
-▓▓        33                                                ▓▓23
-▓▓        22                                                ▓▓24
-▓▓        11                                                ▓▓25
-▓▓        00                                                ▓▓26
-▓▓        99                                                ▓▓27
-▓▓        88                                                ▓▓28
-▓▓        77                                                ▓▓29
-▓▓        66                                                ▓▓30
-▓▓        55                                                ▓▓31
-▓▓        44                                                ▓▓32
-▓▓        33                                                ▓▓33
-▓▓        22                                                ▓▓34
-▓▓        112233445566778899001122334455                    ▓▓35
-▓▓                                                          ▓▓36
-▓▓                                                          ▓▓37
-▓▓                                      by AbdElMalek-L     ▓▓38
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓39
-1234567890123456789012345678901234567890123456789012345678912
-      10        20        30        40        50        60
+// Tetromino tetrominos[7] = {
+//     // I-piece (4x4)
+//     { { {0,0,0,0}, 
+//         {1,1,1,1},
+//         {0,0,0,0},
+//         {0,0,0,0} }, COLOR_CYAN, 4, 4 },
+//     // T-piece
+//     { { {0,1,0},
+//         {1,1,1},
+//         {0,0,0} }, COLOR_MAGENTA, 3, 3 },
+//     // S-piece
+//     { { {0,1,1},
+//         {1,1,0},
+//         {0,0,0} }, COLOR_GREEN, 3, 3 },
+//     // Z-piece
+//     { { {1,1,0},
+//         {0,1,1},
+//         {0,0,0} }, COLOR_RED, 3, 3 },
+//     // L-piece
+//     { { {0,0,1},
+//         {1,1,1},
+//         {0,0,0} }, COLOR_YELLOW, 3, 3 },
+//     // J-piece
+//     { { {1,1,1},
+//         {0,0,1},
+//         {0,0,0} }, COLOR_BLUE, 3, 3 },
+//     // O-piece
+//     { { {1,1},
+//         {1,1} }, COLOR_YELLOW, 2, 2 }
+// };
 
 
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓    Score: 9999999   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓                  ▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓              ▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓   Next:      ▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓              ▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+
+// Function prototypes (add any missing)
+
+
+// ... [Other function prototypes remain the same] ...
+
+void setConsoleSize(int width, int height) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD bufferSize = { width, height };
+    SetConsoleScreenBufferSize(hConsole, bufferSize);
+
+    SMALL_RECT rect = { 0, 0, width - 1, height - 1 };
+    SetConsoleWindowInfo(hConsole, TRUE, &rect);
+}
 
 
 
 
-*/
+
+
+
+
+
+
+
+// // Update drawTetromino to handle 4x4 shapes
+// void drawTetromino(Tetromino t, int x, int y) {
+//     setTextColor(t.color);
+//     for (int i = 0; i < t.height; i++) {
+//         for (int j = 0; j < t.width; j++) {
+//             if (t.shape[i][j]) {
+//                 goToXY((x + j) * 2 + 7, y + i + 8);
+//                 printf("%c%c", RECT_CHAR, RECT_CHAR);
+//             }
+//         }
+//     }
+//     setTextColor(COLOR_DEFAULT);
+// }
+
