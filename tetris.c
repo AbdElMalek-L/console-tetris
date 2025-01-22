@@ -119,15 +119,21 @@ int main() {
     while (!game_exit) {
         if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
             // Game loop
+            clearScreen();
+            drawPlayBoard();
+
             while (!game_exit && !game_over) {
                 if (clock() > lastFall + 1000) {
                     moveTetromino(0, 1);
                     lastFall = clock();
+                    drawGame();
+
                 }
 
                 // Handle input
                 if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
                     moveTetromino(-1, 0);
+
                 }
                 if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
                     moveTetromino(1, 0);
@@ -143,9 +149,6 @@ int main() {
                 }
 
                 // Draw
-                clearScreen();
-                drawPlayBoard();
-                drawGame();
                 drawTetromino(current_tetromino, current_x, current_y);
                 drawNext();
                 waitForNextFrame(30);
@@ -316,6 +319,7 @@ void rotateTetromino() {
     if (!checkCollision(current_x, current_y, &temp)) {
         current_tetromino = temp;
     }
+    drawGame();
 }
 
 void placeTetromino() {
@@ -372,7 +376,7 @@ void drawWelcomePage(int height, int width) {
     setTextColor(COLOR_DEFAULT); // Reset to default color
 }
 
-void drawTetromino(Tetromino tetromino, short x, short y){
+void drawTetromino(Tetromino tetromino, short y, short x){
     x += 8;
     y = y*2+7;
     for(int i = 0; i < 3; i++){
@@ -408,6 +412,8 @@ void moveTetromino(int dx, int dy) {
     } else if (dy == 1) {
         placeTetromino();
     }
+    drawGame();
+
 }
 bool checkCollision(int new_x, int new_y, Tetromino *t) {
     for (int y = 0; y < 3; y++) {
