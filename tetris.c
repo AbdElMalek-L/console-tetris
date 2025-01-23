@@ -7,8 +7,8 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define SCREEN_WIDTH 60
-#define SCREEN_HEIGHT 30
+#define SCREEN_WIDTH 62
+#define SCREEN_HEIGHT 33
 #define BOARD_HEIGHT 32 
 #define BOARD_WIDTH 60
 
@@ -46,10 +46,10 @@ Tetromino tetrominos[7] = {
         {0,0,0} }, 5 }, // L
     { { {1,1,1},
         {0,0,1},
-        {0,0,0} }, 6 }, // J
+        {0,0,0} }, 2 }, // J
     { { {1,1,0},
         {1,1,0},
-        {0,0,0} }, 6 }, // O
+        {0,0,0} }, 4 }, // O
 };
 
 
@@ -94,14 +94,14 @@ void placeTetromino();
 void drawNext();
 void moveTetromino(int dx, int dy);
 bool checkCollision(int new_x, int new_y, Tetromino *t);
+void gameOver();
+void clearLines();
 
 Tetromino current_tetromino = { { {0,0,0}, 
                                   {0,0,0},
                                   {0,0,0} }, 6 };
 int current_x, current_y;
 int next_piece;
-
-int next = 0;
 
 int score = 0;
 
@@ -133,7 +133,6 @@ int main() {
                 // Handle input
                 if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
                     moveTetromino(-1, 0);
-
                 }
                 if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
                     moveTetromino(1, 0);
@@ -159,20 +158,6 @@ int main() {
     }
     return 0;
 }
-
-// void setConsoleSize(int width, int height) {
-//     HWND console = GetConsoleWindow();
-
-//     RECT r;
-//     GetWindowRect(console, &r);
-//     MoveWindow(console, r.left, r.top, width, height, TRUE);
-
-//     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-
-//     COORD newSize;
-//     newSize.X = width;
-//     newSize.Y = height;
-// }
 
 void setTextColor(short color) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -237,8 +222,8 @@ void drawPlayBoard() {
             if (
                 (y >= 3 && y <= 5 && x >= 22 && x <= 42) ||   // score box
                 (y >= 8 && y <= 27 && x >= 6 && x <= 36) ||   // play box
-                (y >= 11 && y <= 17 && x >= 40 && x <= 58) || // next icon box
-                (y >= 19 && y <= 21 && x >= 42 && x <= 56)    // next text box
+                (y >= 11 && y <= 17 && x >= 40 && x <= 58) || // next_piece icon box
+                (y >= 19 && y <= 21 && x >= 42 && x <= 56)    // next_piece text box
             ) {
                 printf("  "); // Draw rectangle
             } else {
@@ -272,15 +257,15 @@ void drawGame(){
     goToXY(28,4);
     printf("Score: %d", score);
 
-    goToXY(45,20);
-    printf("Next: %d", next);
+    goToXY(44,20);
+    printf("Next Tetro.");
 }
 
 void drawNext(){
     for(int x = 0; x < 3; x++){
         for(int y = 0; y < 3; y++){
-            if(tetrominos[next].shape[x][y] != 0){
-                switch (tetrominos[next].color) {
+            if(tetrominos[next_piece].shape[x][y] != 0){
+                switch (tetrominos[next_piece].color) {
                     case 1: setTextColor(COLOR_MAGENTA ); break;
                     case 2: setTextColor(COLOR_GREEN ); break;
                     case 3: setTextColor(COLOR_BLUE ); break;
@@ -303,7 +288,7 @@ void resetGame() {
     score = 0;
     next_piece = rand() % 7;
     current_tetromino = tetrominos[next_piece];
-    current_x = 6; // Centered
+    current_x = 6;
     current_y = 0;
     next_piece = rand() % 7;
 }
@@ -322,27 +307,64 @@ void rotateTetromino() {
     drawGame();
 }
 
+void gameOver(){
+    while(!(GetAsyncKeyState(VK_RETURN) & 0x8000)){
+        goToXY(17, 17);
+        printf("Game Over!");
+        waitForNextFrame(10);
+        goToXY(17, 17);
+        printf("           ");
+        waitForNextFrame(10);
+        goToXY(13, 29);
+        printf("Pres ENTER to restart the game!");
+    }
+    drawPlayBoard();
+}
+
+void clearLines(){
+    for(int y = 0; y < 20; y++){
+        short filled_blocks = 0;
+        for(int x = 0; x < 15; x++){
+            if(game_matrix[y][x]){
+                filled_blocks += 1;
+            }
+            
+        }
+        if (filled_blocks == 15){
+            int cleared_line = y;
+            short temp_matrix[20][15];
+            size_t size_of_game_matrix = sizeof(game_matrix);
+            memcpy(temp_matrix, game_matrix, size_of_game_matrix);
+            for(int y = 0; y <= 20 ; y++){
+                if(y == cleared_line){continue;}
+                for(int x = 0; x < 15; x++){
+                    game_matrix[y+1][x] = temp_matrix[y][x];
+                }
+            }
+            score += 10;
+        }
+    }
+}
+
 void placeTetromino() {
     for (int y = 0; y < 3; y++) {
         for (int x = 0; x < 3; x++) {
             if (current_tetromino.shape[y][x]) {
                 if (current_y + y < 0) {
-                    // Game Over
+                    gameOver();
                     return;
                 }
                 game_matrix[current_y + y][current_x + x] = current_tetromino.color;
             }
         }
     }
-    // Check for line clears
-    // ... [Implement line clearing logic] ...
-    // Spawn new piece
+    clearLines();
     current_tetromino = tetrominos[next_piece];
     next_piece = rand() % 7;
     current_x = 6;
     current_y = 0;
     if (checkCollision(current_x, current_y, &current_tetromino)) {
-        // Game Over
+        gameOver();
         resetGame();
     }
 }
@@ -431,51 +453,7 @@ bool checkCollision(int new_x, int new_y, Tetromino *t) {
     return false;
 }
 
-/*********************************************************************/
 
-// typedef struct {
-//     int shape[4][4]; // Adjusted to 4x4 for 'I' piece
-//     int color;
-//     int width, height;
-// } Tetromino;
-
-// Tetromino tetrominos[7] = {
-//     // I-piece (4x4)
-//     { { {0,0,0,0}, 
-//         {1,1,1,1},
-//         {0,0,0,0},
-//         {0,0,0,0} }, COLOR_CYAN, 4, 4 },
-//     // T-piece
-//     { { {0,1,0},
-//         {1,1,1},
-//         {0,0,0} }, COLOR_MAGENTA, 3, 3 },
-//     // S-piece
-//     { { {0,1,1},
-//         {1,1,0},
-//         {0,0,0} }, COLOR_GREEN, 3, 3 },
-//     // Z-piece
-//     { { {1,1,0},
-//         {0,1,1},
-//         {0,0,0} }, COLOR_RED, 3, 3 },
-//     // L-piece
-//     { { {0,0,1},
-//         {1,1,1},
-//         {0,0,0} }, COLOR_YELLOW, 3, 3 },
-//     // J-piece
-//     { { {1,1,1},
-//         {0,0,1},
-//         {0,0,0} }, COLOR_BLUE, 3, 3 },
-//     // O-piece
-//     { { {1,1},
-//         {1,1} }, COLOR_YELLOW, 2, 2 }
-// };
-
-
-
-// Function prototypes (add any missing)
-
-
-// ... [Other function prototypes remain the same] ...
 
 void setConsoleSize(int width, int height) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -485,28 +463,3 @@ void setConsoleSize(int width, int height) {
     SMALL_RECT rect = { 0, 0, width - 1, height - 1 };
     SetConsoleWindowInfo(hConsole, TRUE, &rect);
 }
-
-
-
-
-
-
-
-
-
-
-
-// // Update drawTetromino to handle 4x4 shapes
-// void drawTetromino(Tetromino t, int x, int y) {
-//     setTextColor(t.color);
-//     for (int i = 0; i < t.height; i++) {
-//         for (int j = 0; j < t.width; j++) {
-//             if (t.shape[i][j]) {
-//                 goToXY((x + j) * 2 + 7, y + i + 8);
-//                 printf("%c%c", RECT_CHAR, RECT_CHAR);
-//             }
-//         }
-//     }
-//     setTextColor(COLOR_DEFAULT);
-// }
-
